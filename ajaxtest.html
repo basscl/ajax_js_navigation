@@ -1,0 +1,179 @@
+<html>
+
+<head>
+<style>
+html {
+	background-color:darkgray;
+}
+img {
+
+}
+#page  {
+	background-color: white;
+	text-align: center;
+	margin: 0 340px;
+}
+#header {
+	width: 100%;
+	background-color: black;
+	    padding-top: 20px;
+}
+#mydiv {
+	height:650px;
+	overflow: hidden;
+}
+#footer {
+	width: 100%;
+	    color: white;
+	    background-color: black;
+	    height: 40px;
+	    padding-top: 10px;
+}
+#resetbutton {
+	color: gray;
+}
+.navbutton {
+	width: 150px;
+	display: inline-block;
+	height: 50px;
+	text-align: center;
+	color:white;
+	text-decoration: none !important;
+	font-family:sans-serif;
+}
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+</head>
+
+<body>
+<div id="page">
+<div id="header">
+	<div class="navbutton" id="test" style="cursor: pointer; text-decoration: underline">Finch 1</div>
+	<div class="navbutton"  id="test2" style="cursor: pointer; text-decoration: underline">Finch 2</div>
+	<div class="navbutton"  id="test3" style="cursor: pointer; text-decoration: underline">Finch 3</div>
+	<div class="navbutton"  id="home" style="cursor: pointer; text-decoration: underline">No Finch</div>
+</div>
+<!--div where insertions happen-->
+<div id="mydiv"></div>
+<div id="footer">Static Footer</div>
+</div>
+
+<script type="text/javascript">
+(function() {
+	//alert("page loaded");
+	var httpRequest;
+	var currentState = history.state;
+
+	//handling reload events on child pages with hash event
+	var hash = (window.location.hash).replace('#', '');
+
+	window.onload = function(){
+
+	    if (hash == 'test' || hash == 'test2' || hash == 'test3'){
+	        //else do something with hash
+		    hashedUrl = hash + '.html'
+		    makeRequest(hashedUrl); 
+		    history.replaceState({hashedUrl}, null, hashedUrl); 
+	    }
+	    else {
+		//load home page content
+	    	firstUrl = 'ajaxtest.html';
+	    	makeRequest('home.html');
+	    	history.replaceState({firstUrl}, null, firstUrl); 	
+	    }
+	}
+	
+
+	
+	/*
+	//detect reloads
+	if(window.performance)
+	{
+	if(performance.navigation.type  == 1 )
+	          {
+		    //event.preventDefault();  
+	            alert('page reloaded');
+	          }
+	}
+	*/
+
+	document.getElementById("test").onclick = function() { makeRequestAndPushHistory('test.html'); };
+	document.getElementById("test2").onclick = function() { makeRequestAndPushHistory('test2.html');};
+	document.getElementById("test3").onclick = function() { makeRequestAndPushHistory('test3.html');};
+	document.getElementById("home").onclick = function() { makeRequestAndPushHistory('home.html'); };
+
+	window.onpopstate = function(event) {
+		//grab the url that was pushed to history and load the appropriate content
+		//alert("pop: " + history.state.url);
+		virtualUrl = event.state.url;
+
+		//alert("virtualUrl: " + virtualUrl);
+		if (virtualUrl === 'ajaxtest.html' ) {
+			
+			virtualUrl = 'home.html';
+		}
+		else if (virtualUrl === undefined) {
+			//alert("trying to go way back");
+			virtualUrl = 'home.html';
+			//virtualUrl = 'home.html';
+		}
+		makeRequest(virtualUrl);
+	};
+
+	function makeRequest(url) {
+		buttonID = (url.split("."))[0];
+		dimSelectedButton(buttonID);
+		httpRequest = new XMLHttpRequest();
+
+		if (!httpRequest) {
+			alert('Giving up :( Cannot create an XMLHTTP instance');
+			return false;
+		}
+		httpRequest.onreadystatechange = alertContents;
+		httpRequest.open('GET', url);
+		httpRequest.send();
+		//history.pushState({url}, null, url);
+
+	}
+
+	function makeRequestAndPushHistory(url) {
+		makeRequest(url) ; 
+		//home content should push url of original page to history, not url of content
+		if (url === 'home.html') {
+			//alert("going home");
+			url = 'ajaxtest.html';
+		}
+		history.pushState({url}, null, url); 
+	}
+
+	function alertContents() {
+		//alert (httpRequest.readyState); 
+		if (httpRequest.readyState === XMLHttpRequest.DONE) {
+			if (httpRequest.status === 200) {
+				//alert(httpRequest.responseText);
+				document.getElementById('mydiv').innerHTML = httpRequest.responseText;
+			} 
+			else {
+				alert('There was a problem with the request.');
+			}
+		}
+	}
+	
+	function dimSelectedButton(button) {
+		//alert("button" + button);
+	        var buttons = document.getElementsByClassName("navbutton");
+	        for(var i =0, il = buttons.length;i<il;i++){
+			if (buttons[i].getAttribute('id') != button) {
+	                buttons[i].style.color = "white";
+		}
+		else {
+			buttons[i].style.color = "gray"
+		}
+	        }
+	}
+})();
+</script>
+
+</body>
+
+</html>
